@@ -8,6 +8,7 @@ class Suppress2d(nn.Module):
         super().__init__()
         self.p = p # probability of not discounting a neuron (ie retaining a neuron)
         self.gamma = gamma # discount factor
+        binomial = Binomial(probs=q)
 
     def forward(self, x):
         '''
@@ -28,11 +29,10 @@ class Suppress2d(nn.Module):
 
         q = 1 - self.p # probability of neurons being discounted
         
-        binomial = Binomial(probs=q)
-        mask = binomial.sample(x.size()) # get the neurons to be discount
+        mask = self.binomial.sample(x.size()) # get the neurons to be discount
         discounted = x * mask * self.gamma
         
         inverted_mask = torch.logical_not(mask).float() # get the inverted mask
-        remnant = x * inverted_mask
+        remnant = x * inverted_mask * 1/q
 
         return discounted + remnant
